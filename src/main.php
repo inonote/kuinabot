@@ -15,17 +15,31 @@
   );
 
   //30分おきにランダムツイート
-  if ((date('i')%30 == 0) || isset($autotw)){
-    $tw_serifu = file($bdir.'/serifu/tweets_randomized.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if ($tw_serifu === false || count($tw_serifu) == 0){ //ランダムに並べ替え
-      $tw_serifu = file($bdir.'/serifu/tweets.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-      shuffle($tw_serifu);
+  $tm = (int)date('Hi');
+  if (($tm >= 700 && $tm <= 2300) && (date('i')%30 == 0 || isset($autotw))){
+    if ($tm == 700){
+      $o->post('/statuses/update', array(
+        'status' => 'おはようございます！'
+      ));
     }
-    $o->post('/statuses/update', array(
-      'status' => $tw_serifu[0]
-    ));
-    array_splice($tw_serifu, 0, 1);
-    file_put_contents($bdir.'/serifu/tweets_randomized.txt', implode("\n", $tw_serifu));
+    else if ($tm == 2300){
+      $oyasumi = array('おやすみなさ～い(つω=)', 'おやすみなさ～い(=ω=)｡o', 'おやすみなさ～い( ˘ω˘)ｽﾔｧ');
+      $o->post('/statuses/update', array(
+        'status' => $oyasumi[rand(0, 2)]
+      ));
+    }
+    else{
+      $tw_serifu = file($bdir.'/serifu/tweets_randomized.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      if ($tw_serifu === false || count($tw_serifu) == 0){ //ランダムに並べ替え
+        $tw_serifu = file($bdir.'/serifu/tweets.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        shuffle($tw_serifu);
+      }
+      $o->post('/statuses/update', array(
+        'status' => $tw_serifu[0]
+      ));
+      array_splice($tw_serifu, 0, 1);
+      file_put_contents($bdir.'/serifu/tweets_randomized.txt', implode("\n", $tw_serifu));
+    }
   }
 
   //自動リプ
