@@ -1,5 +1,4 @@
-# kuinabot
-![GPL v3](https://img.shields.io/badge/lisence-GPL%20v3-blue)  
+# kuinabot [![GitHub license](https://img.shields.io/github/license/inonote/kuinabot)](https://github.com/inonote/kuinabot/blob/master/LICENSE.md)
 A Twitter bot acting like Kuina Natsukawa.
 
 ### 使用ライブラリ
