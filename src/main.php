@@ -66,6 +66,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     }
   }
 
+  //アラーム設定をロード
+  // user_id,tweet_id,screen_name,hour,minute
+  $alarms = array();
+  $alarms_raw = file($bdir.'/private/alarm.dat', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  if ($alarms_raw !== false){
+    foreach ($alarms_raw as $v) {
+      $e = explode(',', $v, 5);
+      $alarms[$e[0]] = array(
+        'tweet_id' => $e[1],
+        'screen_name' => $e[2],
+        'hour' => (int)$e[3],
+        'minute' => (int)$e[4]
+      );
+    }
+  }
+
   //自動リプ
   $followers = json_decode(json_encode($o->get('followers/ids', array('user_id' => $botacname, 'count' => '5000', 'stringify_ids' => true))), true);
   $rep_serifu = file($bdir.'/serifu/reply.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -75,6 +91,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   foreach($mentions as $key => $val){
     if($val['user']['screen_name'] != $botacname && strtotime($val['created_at']) > $begintime) {
       $text = '';
+      $val['text'] = htmlspecialchars_decode($val['text']);
+      $val['user']['name'] = htmlspecialchars_decode($val['user']['name']);
+      
       if(preg_match('/(TL|タイムライン|ツイート)を?見て/', $val['text'])){
         $o->post('/lists/members/create', array(
           'list_id' => '1134067047376179200',
@@ -96,6 +115,31 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
       }
       else if(preg_match('/「([\S]*?)」って呼んで/', $val['text'], $mtcs)){
         $text = '分かりました、'.$mtcs[1].'さん！';
+      }
+      else if(preg_match('/([0-9]*?):([0-9]*?)に(起こして|呼んで|知らせて)/', $val['text'], $mtcs)){
+        $hour = (int)$mtcs[1];
+        $minute = (int)$mtcs[2];
+        if ($hour < 0 || $hour >= 24 || $minute < 0 || $minute >=60){
+          $text = '時間は 0 から 23 、分は 0 から 59 までしかないですよ？';
+        }
+        else {
+          $text = '分かりました！少し遅れてしまうかもしれないので、あまり期待しないでくださいね。'.PHP_EOL.PHP_EOL.'※操作: 「アラームをやめる」'.PHP_EOL.'※注意:'.PHP_EOL.'・アラームを設定するためにbot宛に送ったツイートは消さないでください。'.PHP_EOL.'・設定した時刻を変更するには一度アラームをやめてから再登録してください。';
+          $alarms[$val['user']['id_str']] = array(
+            'tweet_id' => $val['id_str'],
+            'screen_name' => $val['user']['screen_name'],
+            'hour' => $hour,
+            'minute' => $minute
+          );
+        }
+      }
+      else if(strpos($val['text'], 'アラームをやめる')!==false){
+        if (@$alarms[$val['user']['id_str']] === null){
+          $text = 'まだ何も頼まれていないですよ？';
+        }
+        else {
+          $text = '分かりました！';
+          unset($alarms[$val['user']['id_str']]);
+        }
       }
       else if(strpos($val['text'], 'おみくじ')!==false){
         $text = ['【大凶】','【凶】','【末吉】','【小吉】','【中吉】','【吉】','【大吉】'][rand(0,6)].'です。';
@@ -174,4 +218,30 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     }
   }
 
+  //アラーム  
+  $tm = (int)date('Hi');
+  foreach ($alarms as $key => $v) {
+    if (((int)$v['hour'])*100 + ((int)$v['minute']) <= $tm){
+      $ret = json_decode(json_encode($o->get('/statuses/lookup', array(
+        'id'=>$v['tweet_id']
+      ))),true);
+      if (count($ret) > 0){
+        $o->post('/statuses/update', array(
+          'status' => '@'.$v['screen_name'].' 時間ですよ～！',
+          'in_reply_to_status_id'=>$v['tweet_id']
+        ));
+      }
+      unset($alarms[$key]);
+    }
+  }
+
   pd_save();
+
+  //アラームを設定を保存
+  $alarms_raw_t = '';
+  foreach ($alarms as $key => $v) {
+    $alarms_raw_t.=$key.','.$v['tweet_id'].','.$v['screen_name'].','.$v['hour'].','.$v['minute'].PHP_EOL;
+  }
+  file_put_contents($bdir.'/private/alarm.dat', $alarms_raw_t);
+
+   
