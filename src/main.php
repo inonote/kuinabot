@@ -40,12 +40,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
   //30分おきにランダムツイート
   $tm = (int)date('Hi');
-  if (date('m-d H-i')==='01-01 00:00'){ //あけおめツイート
+  if (date('m-d H:i')==='01-01 00:00'){ //あけおめツイート
     $o->post('/statuses/update', array(
       'status' => 'あけましておめでとうございます。'.PHP_EOL.'今年もよろしくお願いします！'."٩( 'ω' )و"
     ));
   }
-  else if (date('m-d H-i')==='01-01 00:02'){ //あけおめからの寝る
+  else if (date('m-d H:i')==='01-01 00:02'){ //あけおめからの寝る
     $o->post('/statuses/update', array(
       'status' => 'では私は先に寝ますね！おやすみなさい～'
     ));
