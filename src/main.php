@@ -40,17 +40,29 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
   //30分おきにランダムツイート
   $tm = (int)date('Hi');
-  if (($tm >= 700 && $tm <= 2300) && (date('i')%30 == 0 || isset($autotw))){
+  if (date('m-d H-i')==='01-01 00:00'){ //あけおめツイート
+    $o->post('/statuses/update', array(
+      'status' => 'あけましておめでとうございます。'.PHP_EOL.'今年もよろしくお願いします！'."٩( 'ω' )و"
+    ));
+  }
+  else if (date('m-d H-i')==='01-01 00:02'){ //あけおめからの寝る
+    $o->post('/statuses/update', array(
+      'status' => 'では私は先に寝ますね！おやすみなさい～'
+    ));
+  }
+  else if (($tm >= 700 && $tm <= 2300) && (date('i')%30 == 0 || isset($autotw))){
     if ($tm == 700){
       $o->post('/statuses/update', array(
         'status' => 'おはようございます！'
       ));
     }
     else if ($tm == 2300){
-      $oyasumi = array('おやすみなさ～い(つω=)', 'おやすみなさ～い(=ω=)｡o', 'おやすみなさ～い( ˘ω˘)ｽﾔｧ');
-      $o->post('/statuses/update', array(
-        'status' => $oyasumi[rand(0, 2)]
-      ));
+      if (date('m-d')!=='12-31'){
+        $oyasumi = array('おやすみなさ～い(つω=)', 'おやすみなさ～い(=ω=)｡o', 'おやすみなさ～い( ˘ω˘)ｽﾔｧ');
+        $o->post('/statuses/update', array(
+          'status' => $oyasumi[rand(0, 2)]
+        ));
+      }
     }
     else{
       $tw_serifu = file($bdir.'/serifu/tweets_randomized.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
