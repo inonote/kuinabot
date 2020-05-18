@@ -71,7 +71,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         shuffle($tw_serifu);
       }
       $o->post('/statuses/update', array(
-        'status' => $tw_serifu[0]
+        'status' => str_replace('/', PHP_EOL, $tw_serifu[0])
       ));
       array_splice($tw_serifu, 0, 1);
       file_put_contents($bdir.'/serifu/tweets_randomized.txt', implode("\n", $tw_serifu));
@@ -155,6 +155,63 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
       }
       else if(strpos($val['text'], 'おみくじ')!==false){
         $text = ['【大凶】','【凶】','【末吉】','【小吉】','【中吉】','【吉】','【大吉】'][rand(0,6)].'です。';
+      }
+      else if(strpos($val['text'], '[k5375Vy3eWLdsfdRQzQcuNWJ5h8csLJS]')!==false){
+        $text = 'status: ok';
+      }
+      else if(strpos($val['text'], 'ツイートした時刻')!==false){
+        $id = (int)$val['in_reply_to_status_id_str'];
+        if ($id !== 0){
+	        $millsec = (($id >> 22 & 0x000003FFFFFFFFFF) + 1288834974657);
+	        $text = date('Y年m月d日 H時i分s秒', $millsec/1000).($millsec%1000).' です！';
+        }
+        else{
+            $text = '自分のツイートに返信する形でメンションを送ってくださいね。';
+        }
+      }
+      else if (strpos($val['text'], '#くいなとじゃんけん')!==false){
+        $player_hand = 0;
+        if (strpos($val['text'], '#くいなにグーで勝つ')!==false){
+          $player_hand = 1;
+        }
+        else if (strpos($val['text'], '#くいなにチョキで勝つ')!==false){
+          $player_hand = 2;
+        }
+        else if (strpos($val['text'], '#くいなにパーで勝つ')!==false){
+          $player_hand = 3;
+        }
+        if ($player_hand > 0){
+          $janprm = random_int(0, 100);
+          $kuina_iswin = false;
+          if ($janprm <= 60){ //私の勝ち！
+            $kuina_iswin = true;
+          }
+          if ($kuina_iswin){
+            $text = 'じゃんけんポン！(真顔)
+
+YOU LOSE(ﾌﾞｳｳｳｳｳｳ!!!!)
+
+私の勝ちです！😁
+なんで負けたか、明日まで
+考えておいてください。
+そしたら何かが見えてくるはずです。
+
+では、いただきまーす(ﾌﾞｼｭｳｳｳｳｳｳｳ)
+
+一日一回勝負。
+じゃあ、また明日挑戦してくださいね👋☺️';
+          }
+          else{
+            $text = 'じゃんけんポン！(真顔)
+
+YOU WIN(ﾋﾟｭｩｫｵｵｵｵｫｫｫｫ!!!!)
+
+すごいです！😁
+明日は私にリベンジさせてください。
+
+では、これをどうぞ(ﾌﾞｼｭｳｳｳｳｳｳｳ)';
+          }
+        }
       }
       else{
         foreach($rep_serifu as $row){
